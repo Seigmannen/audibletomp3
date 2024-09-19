@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Hent Audible Activation Bytes automatisk
-ACTIVATION_BYTES=$(audible activate | grep -oP '(?<=Activation Bytes: )\w+')
+echo "Henter Activation Bytes..."
+
+ACTIVATION_BYTES=$(audible activation-bytes | grep -o '[A-Fa-f0-9]\{8\}')
+
 
 if [[ -z "$ACTIVATION_BYTES" ]]; then
     echo "Kunne ikke hente Activation Bytes. Sørg for at du er logget inn i Audible."
