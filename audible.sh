@@ -1,7 +1,14 @@
 #!/bin/bash
 
-# Sett Audible Activation Bytes her
-ACTIVATION_BYTES="YOUR_ACTIVATION_BYTES"
+# Hent Audible Activation Bytes automatisk
+ACTIVATION_BYTES=$(audible activate | grep -oP '(?<=Activation Bytes: )\w+')
+
+if [[ -z "$ACTIVATION_BYTES" ]]; then
+    echo "Kunne ikke hente Activation Bytes. Sørg for at du er logget inn i Audible."
+    exit 1
+fi
+
+echo "Aktiveringskoden ble hentet: $ACTIVATION_BYTES"
 
 # Hent liste over alle tilgjengelige bøker
 echo "Henter Audible bibliotek..."
