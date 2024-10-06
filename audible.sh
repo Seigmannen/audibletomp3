@@ -1,10 +1,23 @@
 #!/bin/bash
 
+# Vis tilgjengelige profiler
+echo "Tilgjengelige Audible-profiler:"
+audible manage profile list
+
+# Be brukeren velge en profil
+echo "Velg en profil ved å skrive profilnavnet:"
+read profile_name
+
+# Sjekk om profilen er valgt
+if [[ -z "$profile_name" ]]; then
+    echo "Ingen profil ble valgt. Avslutter."
+    exit 1
+fi
+
 # Hent Audible Activation Bytes automatisk
 echo "Henter Activation Bytes..."
 
-ACTIVATION_BYTES=$(audible activation-bytes | grep -o '[A-Fa-f0-9]\{8\}')
-
+ACTIVATION_BYTES=$(audible -P "$profile_name" activation-bytes | grep -o '[A-Fa-f0-9]\{8\}')
 
 if [[ -z "$ACTIVATION_BYTES" ]]; then
     echo "Kunne ikke hente Activation Bytes. Sørg for at du er logget inn i Audible."
@@ -15,7 +28,7 @@ echo "Aktiveringskoden ble hentet: $ACTIVATION_BYTES"
 
 # Hent liste over alle tilgjengelige bøker
 echo "Henter Audible bibliotek..."
-audible library list > library.txt
+audible -P "$profile_name" library list > library.txt
 
 # Skriv ut hva library.txt inneholder for feilsøking
 echo "Innholdet i Audible-biblioteket:"
@@ -70,7 +83,7 @@ echo "Du har valgt å laste ned: $selected_title (ASIN: $selected_asin)"
 
 # Lagre filen i download/
 output_dir=download/
-audible download --output-dir "$output_dir" --asin "$selected_asin" --aax-fallback -q best --cover --cover-size 1215 --chapter --chapter-type Flat
+audible -P "$profile_name" download --output-dir "$output_dir" --asin "$selected_asin" --aax-fallback -q best --cover --cover-size 1215 --chapter --chapter-type Flat
 
 # Finn nedlastet fil (vi antar at filen har .aax eller .aaxc filending)
 aax_file=$(find "$output_dir" -name "*.aax" -o -name "*.aaxc" | head -n 1)
@@ -86,7 +99,7 @@ echo "Konverterer $aax_file til MP3..."
 
 # Slett de originale filene
 rm -f "$output_dir"/*.*
-
+   
 if [[ $? -eq 0 ]]; then
     echo "Originalfilene ble slettet."
 else
