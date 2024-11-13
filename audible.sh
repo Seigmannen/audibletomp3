@@ -1,47 +1,47 @@
 #!/bin/bash
 
-# Vis tilgjengelige profiler
-echo "Tilgjengelige Audible-profiler:"
+# Show available profiles
+echo "Available Audible profiles:"
 audible manage profile list
 
-# Be brukeren velge en profil
-echo "Velg en profil ved å skrive profilnavnet:"
+# Prompt the user to select a profile
+echo "Select a profile by entering the profile name:"
 read profile_name
 
-# Sjekk om profilen er valgt
+# Check if a profile is selected
 if [[ -z "$profile_name" ]]; then
-    echo "Ingen profil ble valgt. Avslutter."
+    echo "No profile selected. Exiting."
     exit 1
 fi
 
-# Hent Audible Activation Bytes automatisk
-echo "Henter Activation Bytes..."
+# Automatically retrieve Audible Activation Bytes
+echo "Retrieving Activation Bytes..."
 
 ACTIVATION_BYTES=$(audible -P "$profile_name" activation-bytes | grep -o '[A-Fa-f0-9]\{8\}')
 
 if [[ -z "$ACTIVATION_BYTES" ]]; then
-    echo "Kunne ikke hente Activation Bytes. Sørg for at du er logget inn i Audible."
+    echo "Could not retrieve Activation Bytes. Make sure you are logged into Audible."
     exit 1
 fi
 
-echo "Aktiveringskoden ble hentet: $ACTIVATION_BYTES"
+echo "Activation code retrieved: $ACTIVATION_BYTES"
 
-# Hent liste over alle tilgjengelige bøker
-echo "Henter Audible bibliotek..."
+# Retrieve a list of all available books
+echo "Retrieving Audible library..."
 audible -P "$profile_name" library list > library.txt
 
-# Skriv ut hva library.txt inneholder for feilsøking
-echo "Innholdet i Audible-biblioteket:"
+# Print the content of library.txt for debugging
+echo "Content of the Audible library:"
 cat library.txt
 
-# Hent titler og ASIN fra listen
+# Extract titles and ASIN from the list
 declare -a titles
 declare -a asins
 
 while IFS= read -r line; do
-    # Ekstraher ASIN og tittel fra linjen
-    asin=$(echo "$line" | cut -d':' -f1)  # ASIN er første element
-    title=$(echo "$line" | cut -d':' -f3- | sed 's/^ //g')  # Tittel etter 3. kolon, trim start-space
+    # Extract ASIN and title from the line
+    asin=$(echo "$line" | cut -d':' -f1)  # ASIN is the first element
+    title=$(echo "$line" | cut -d':' -f3- | sed 's/^ //g')  # Title after the 3rd colon, trim leading space
 
     if [[ -n $asin && -n $title ]]; then
         titles+=("$title")
@@ -49,59 +49,59 @@ while IFS= read -r line; do
     fi
 done < library.txt
 
-# Slett midlertidig bibliotek-fil
+# Delete temporary library file
 rm library.txt
 
-# Sjekk om det finnes bøker i listen
+# Check if there are any books in the list
 if [[ ${#titles[@]} -eq 0 ]]; then
-    echo "Fant ingen bøker i biblioteket ditt."
+    echo "No books found in your library."
     exit 1
 fi
 
-# Vis meny for å velge en tittel
-echo "Velg en tittel å laste ned:"
+# Display menu to select a title
+echo "Select a title to download:"
 for i in "${!titles[@]}"; do
     printf "%d) %s\n" "$((i+1))" "${titles[$i]}"
 done
 
-# Be brukeren velge en gjenstand
-read -p "Skriv inn nummeret til tittelen du vil laste ned: " selection
+# Prompt the user to select an item
+read -p "Enter the number of the title you want to download: " selection
 
-# Valider brukerens valg
+# Validate the user's choice
 if ! [[ "$selection" =~ ^[0-9]+$ ]] || [[ "$selection" -lt 1 ]] || [[ "$selection" -gt ${#titles[@]} ]]; then
-    echo "Ugyldig valg. Avslutter."
+    echo "Invalid selection. Exiting."
     exit 1
 fi
 
-# Juster valg (brukerens valg er 1-basert, mens arrayen er 0-basert)
+# Adjust selection (user's choice is 1-based, while arrays are 0-based)
 index=$((selection-1))
 
 selected_asin=${asins[$index]}
 selected_title=${titles[$index]}
 
-echo "Du har valgt å laste ned: $selected_title (ASIN: $selected_asin)"
+echo "You have chosen to download: $selected_title (ASIN: $selected_asin)"
 
-# Lagre filen i download/
+# Save the file in download/
 output_dir=download/
 audible -P "$profile_name" download --output-dir "$output_dir" --asin "$selected_asin" --aax-fallback -q best --cover --cover-size 1215 --chapter --chapter-type Flat
 
-# Finn nedlastet fil (vi antar at filen har .aax eller .aaxc filending)
+# Find the downloaded file (assuming it has .aax or .aaxc extension)
 aax_file=$(find "$output_dir" -name "*.aax" -o -name "*.aaxc" | head -n 1)
 
 if [[ -z "$aax_file" ]]; then
-    echo "Kunne ikke finne AAX/AAXC-filen. Nedlasting feilet?"
+    echo "Could not find the AAX/AAXC file. Download failed."
     exit 1
 fi
 
-# Konverter AAX/AAXC til MP3 med AAXtoMP3
-echo "Konverterer $aax_file til MP3..."
+# Convert AAX/AAXC to MP3 using AAXtoMP3
+echo "Converting $aax_file to MP3..."
 ./AAXtoMP3 -A "$ACTIVATION_BYTES" -e:mp3 -c --use-audible-cli-data "$aax_file"
 
-# Slett de originale filene
+# Delete the original files
 rm -f "$output_dir"/*.*
    
 if [[ $? -eq 0 ]]; then
-    echo "Originalfilene ble slettet."
+    echo "Original files have been deleted."
 else
-    echo "Kunne ikke slette en eller flere filer."
+    echo "Could not delete one or more files."
 fi
