@@ -12,3 +12,11 @@ Before running the script, ensure you have the following installed and set up:
 - **Installation**:
   ```bash
   pip install audible-cli
+
+- **Setup**: Log in to your Audible account using the following command:
+  ```bash
+  audible login
+
+After logging in, you can manage profiles and retrieve activation bytes as needed.
+
+For more details, visit the [audible-cli GitHub page](https://github.com/mkb79/audible-cli).
