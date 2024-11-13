@@ -44,15 +44,15 @@ To create the `download` folder, run:
 ```bash
 mkdir download
 ```
-### Usage
-1. **Run the Script**
+## Usage
+### 1. Run the Script
     ```bash
     ./audible.sh
     ```
-2. **Follow the prompts:**
-    * Select the Audible profile.
-    * Choose a book from your library to download.
-    * The script will download the book, convert it to chaptered MP3, and clean up the original files.
+### 2. Follow the prompts:
+  * Select the Audible profile.
+  * Choose a book from your library to download.
+  * The script will download the book, convert it to chaptered MP3, and clean up the original files.
 
 ### Notes
 * Ensure your Audible account is properly set up in **audible-cli**.
