@@ -45,10 +45,10 @@ To create the `download` folder, run:
 mkdir download
 ```
 ## Usage
-### 1. Run the Script
-    ```bash
-    ./audible.sh
-    ```
+### 1. Run the Script:
+  ```bash
+  ./audible.sh
+  ```
 ### 2. Follow the prompts:
   * Select the Audible profile.
   * Choose a book from your library to download.
